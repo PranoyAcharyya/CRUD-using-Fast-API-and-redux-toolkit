@@ -1,25 +1,29 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
-import heroImg from "./assets/hero.png";
-import "./App.css";
+
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   fetchNotesAPI,
   createNoteAPI,
   deleteNoteAPI,
   updateNoteAPI,
 } from "./features/notes/notesAPI";
+
 import {
   addNote,
   setNotes,
-  deleteNotes,
+  deleteNote,
   updateNote,
 } from "./features/notes/notesSlice";
 
 function App() {
-  const notes = useSelector((state) => state.notes.notes);
-  const [count, setCount] = useState(0);
+
+  const notes = useSelector(
+    (state) => state.notes.notes
+  );
+
+  const dispatch = useDispatch();
+
 
   // -----------------------------
   // Form State
@@ -32,25 +36,40 @@ function App() {
 
   const [editingId, setEditingId] = useState(null);
 
-  const dispatch = useDispatch();
 
+  // -----------------------------
+  // Load Notes
+  // -----------------------------
   useEffect(() => {
+
     const loadNotes = async () => {
+
       const data = await fetchNotesAPI();
 
       dispatch(setNotes(data));
     };
 
     loadNotes();
+
   }, []);
 
+
+  // -----------------------------
+  // Delete
+  // -----------------------------
   const handleDelete = async (id) => {
+
     await deleteNoteAPI(id);
 
-    dispatch(deleteNotes(id));
+    dispatch(deleteNote(id));
   };
 
+
+  // -----------------------------
+  // Edit
+  // -----------------------------
   const handleEdit = (note) => {
+
     setTitle(note.title);
 
     setContent(note.content);
@@ -60,7 +79,12 @@ function App() {
     setEditingId(note.id);
   };
 
+
+  // -----------------------------
+  // Submit
+  // -----------------------------
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     const noteData = {
@@ -69,85 +93,186 @@ function App() {
       category,
     };
 
-    // -----------------------------
+
     // UPDATE
-    // -----------------------------
     if (editingId) {
-      const updated = await updateNoteAPI(editingId, noteData);
+
+      const updated = await updateNoteAPI(
+        editingId,
+        noteData
+      );
 
       dispatch(updateNote(updated));
 
       setEditingId(null);
     }
 
-    // -----------------------------
+
     // CREATE
-    // -----------------------------
     else {
+
       const createdNote = await createNoteAPI(noteData);
 
       dispatch(addNote(createdNote));
     }
 
+
     // Clear Form
     setTitle("");
+
     setContent("");
+
     setCategory("");
   };
 
+
   return (
-    <>
-      <div>
-        <h1>Notes App</h1>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+    <div className="min-h-screen bg-zinc-950 text-white px-6 py-10">
 
-          <br />
-          <br />
+      <div className="max-w-6xl mx-auto">
 
-          <textarea
-            placeholder="Content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
 
-          <br />
-          <br />
+        {/* HEADER */}
+        <div className="mb-10">
 
-          <input
-            type="text"
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
+          <h1 className="text-4xl font-bold tracking-tight">
+            Notes App
+          </h1>
 
-          <br />
-          <br />
+          <p className="text-zinc-400 mt-2">
+            Redux Toolkit + FastAPI + SQLite
+          </p>
 
-          <button type="submit">{editingId ? "Update Note" : "Add Note"}</button>
-        </form>
+        </div>
 
-        <h2>Total Notes: {notes.length}</h2>
 
-        {notes.map((note) => (
-          <div key={note.id}>
-            <h3>{note?.title}</h3>
-            <p>{note.content}</p>
-            <small>{note.category}</small>
-            <br />
-            <button onClick={() => handleEdit(note)}>Edit</button><br />
-            <button onClick={() => handleDelete(note.id)}>Delete</button>
-            <hr />
-          </div>
-        ))}
+        {/* FORM */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-10">
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
+
+            <input
+              type="text"
+              placeholder="Note title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-zinc-600"
+            />
+
+
+            <textarea
+              placeholder="Write your note..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows="5"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-zinc-600 resize-none"
+            />
+
+
+            <input
+              type="text"
+              placeholder="Category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-zinc-600"
+            />
+
+
+            <button
+              type="submit"
+              className="bg-white text-black px-6 py-3 rounded-xl font-medium hover:opacity-90 transition"
+            >
+              {editingId
+                ? "Update Note"
+                : "Add Note"}
+            </button>
+
+          </form>
+
+        </div>
+
+
+        {/* NOTES HEADER */}
+        <div className="flex items-center justify-between mb-6">
+
+          <h2 className="text-2xl font-semibold">
+            Your Notes
+          </h2>
+
+          <span className="text-zinc-400">
+            {notes.length} Notes
+          </span>
+
+        </div>
+
+
+        {/* NOTES GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {
+            notes.map((note) => (
+
+              <div
+                key={note.id}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col justify-between"
+              >
+
+                <div>
+
+                  <div className="flex items-center justify-between mb-4">
+
+                    <span className="text-xs bg-zinc-800 px-3 py-1 rounded-full text-zinc-300">
+                      {note.category}
+                    </span>
+
+                  </div>
+
+
+                  <h3 className="text-xl font-semibold mb-3">
+                    {note.title}
+                  </h3>
+
+
+                  <p className="text-zinc-400 leading-relaxed">
+                    {note.content}
+                  </p>
+
+                </div>
+
+
+                {/* ACTIONS */}
+                <div className="flex gap-3 mt-6">
+
+                  <button
+                    onClick={() => handleEdit(note)}
+                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 transition px-4 py-2 rounded-xl"
+                  >
+                    Edit
+                  </button>
+
+
+                  <button
+                    onClick={() => handleDelete(note.id)}
+                    className="flex-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition px-4 py-2 rounded-xl"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+            ))
+          }
+
+        </div>
+
       </div>
-    </>
+
+    </div>
   );
 }
 
